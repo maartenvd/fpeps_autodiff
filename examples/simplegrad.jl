@@ -1,18 +1,17 @@
-using Revise,Zygote,BackwardsLinalg,OMEinsum,fpeps,LinearAlgebra
+using OMEinsum,fpeps,LinearAlgebra,OptimKit
 
 let
-    width = 4;
-    height = 4;
+    width = 6;
+    height = 6;
 
     D = 2;
     d = 2;
     chi = 2;
 
     peps = Array{Array{ComplexF64,5},2}(undef,width,height);
-    for i = 1:width
-        for j = 1:height
-            peps[i,j] = rand(ComplexF64,D,D,D,D,d);
-        end
+    for i = 1:width, j = 1:height
+        peps[i,j] = rand(ComplexF64,D,D,D,D,d);
+        peps[i,j] /= norm(peps[i,j])
     end
 
     sx = 0.5*ComplexF64[0 1;1 0]; sy = 0.5*ComplexF64[0 1im;-1im 0]; sz = 0.5*ComplexF64[1 0;0 -1];
@@ -23,23 +22,5 @@ let
 
     ham = ham1+ham2+ham3;
 
-    stepsize = 0.01;
-
-    boundaries = gen_boundaries(peps,chi)
-    for topit = 1:500
-
-
-        (energy,boundaries) = calc_energy(peps,ham,boundaries)
-        @show energy/(width*height);
-
-        function cfun(x)
-            calc_energy(x,ham,boundaries)[1]
-        end
-
-        derivs = cfun'(peps);
-        @show sum(norm.(derivs))
-        peps.-=stepsize*derivs;
-
-    end
-
+    retval = find_groundstate(peps,ham,ConjugateGradient(verbosity=2),gen_boundaries(peps,chi))
 end

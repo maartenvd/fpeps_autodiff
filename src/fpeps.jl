@@ -1,5 +1,5 @@
 module fpeps
-    using Zygote,BackwardsLinalg,OMEinsum,LinearAlgebra
+    using Zygote,BackwardsLinalg,OMEinsum,LinearAlgebra,OptimKit
 
     #default settings
     module Defaults
@@ -7,7 +7,7 @@ module fpeps
         const tol = 1e-12
     end
 
-    export calc_energy,gen_boundaries,calc_boundaries
+    export calc_energy,gen_boundaries,calc_boundaries,find_groundstate
 
     #zygote helper?
     eye(T,p1,p2) = Matrix{T}(I,p1,p2)
@@ -18,4 +18,5 @@ module fpeps
     include("vomps.jl")
     include("boundaries.jl")
     include("energy.jl")
+    include("optimhook.jl")
 end
