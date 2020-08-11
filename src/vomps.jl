@@ -106,7 +106,7 @@ function north_vomps(above,pepsline,obelow;tol=Defaults.tol,maxiter=Defaults.max
 
     end
 
-    #err > tol && println("vomps failed to converge $(err)")
+    err > tol && println("vomps failed to converge $(err)")
 
     return copy(below)
 end
