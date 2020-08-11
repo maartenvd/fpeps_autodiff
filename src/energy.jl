@@ -47,7 +47,7 @@ function calc_energy_impl(peps,nbounds,sbounds,ham)
         @ein h[] := GL[1,2,3,4]*NR[4,2,3,1]
         @ein n[] := NL[1,2,3,4]*NR[4,2,3,1]
 
-        toret += sum(h)/sum(n)
+        toret += h[]/n[]
 
     end
 
