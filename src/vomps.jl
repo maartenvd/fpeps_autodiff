@@ -39,10 +39,10 @@ end
 function init_envs(above,pepsline,below)
     T = eltype(above[1]);
 
-    temp = eye(T,1,1)#Matrix{T}(I,1,1);
+    temp = eye(T,1,1);
 
-    ltemp = eye(T,size(pepsline[1],West),size(pepsline[1],West))#Matrix{T}(I,size(pepsline[1],West),size(pepsline[1],West))
-    rtemp = eye(T,size(pepsline[length(pepsline)],East),size(pepsline[length(pepsline)],East))#Matrix{T}(I,size(pepsline[end],East),size(pepsline[end],East))
+    ltemp = eye(T,size(pepsline[1],West),size(pepsline[1],West));
+    rtemp = eye(T,size(pepsline[length(pepsline)],East),size(pepsline[length(pepsline)],East))
 
     @ein leftstart[-1,-2,-3,-4] := ltemp[-2,-3]*temp[-1,-4]
     @ein rightstart[-1,-2,-3,-4] := rtemp[-2,-3]*temp[-1,-4]
@@ -61,7 +61,7 @@ end
 function init_envs(below)
     T = eltype(below[1]);
 
-    temp = eye(T,1,1)#Matrix{T}(I,1,1);
+    temp = eye(T,1,1)
 
 
     @ein leftstart[-1,-2] := temp[-1,-2]
@@ -88,7 +88,7 @@ function north_vomps(above,pepsline,obelow;tol=Defaults.tol,maxiter=Defaults.max
     (NL,NR) = init_envs(below);
 
     # accumulate totalnorm seperately, storing well normalized tensors in below
-    # not sure if it's needed, but otherwise the first tensor has an absuurd norm, the others are normal
+    # not sure if it's needed, but otherwise the first tensor has an absurd norm, the others are normal
     # now I just evenly distribute them at the end of vomps
     totalnorm = 1.0;
 
@@ -137,6 +137,7 @@ function north_vomps(above,pepsline,obelow;tol=Defaults.tol,maxiter=Defaults.max
         below[i]*=totalnorm
     end
 
+    #cannot autodiff through try-catch so @warn doesn't work -.-
     #err > tol && @warn "vomps failed to converge $(err)"
 
     return copy(below)
