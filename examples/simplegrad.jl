@@ -6,7 +6,7 @@ let
 
     D = 2;
     d = 2;
-    chi = 2;
+    chi = 10;
 
     peps = Array{Array{ComplexF64,5},2}(undef,width,height);
     for i = 1:width, j = 1:height

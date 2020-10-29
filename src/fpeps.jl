@@ -3,7 +3,7 @@ module fpeps
 
     #default settings
     module Defaults
-        const maxiter = 100
+        const maxiter = 10
         const tol = 1e-12
     end
 
