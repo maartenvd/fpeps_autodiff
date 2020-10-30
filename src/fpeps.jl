@@ -7,6 +7,8 @@ module fpeps
         const tol = 1e-12
     end
 
+    LinearAlgebra.default_svd_alg(A::Matrix) = LinearAlgebra.QRIteration();
+    
     export calc_energy,gen_boundaries,calc_boundaries,find_groundstate
 
     #zygote helper?

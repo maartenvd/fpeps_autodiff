@@ -1,4 +1,4 @@
-#generate inital north boundary mpses
+#generate inital north boundary mpses of bond dimension chi
 function gen_north_bounds(peps,chi)
     T = eltype(peps[1,1])
 
