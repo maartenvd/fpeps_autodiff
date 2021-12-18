@@ -28,7 +28,7 @@ function gen_north_bounds(peps,chi)
     end
 end
 
-function gen_boundaries(peps,chi)
+function gen_boundaries(peps,chi = 1)
     T = eltype(peps[1,1]);
 
     bs = map([Dirs...]) do dir
@@ -36,7 +36,7 @@ function gen_boundaries(peps,chi)
     end
 end
 
-function calc_north_boundaries(peps,pboundaries;maxiter=Defaults.maxiter,tol=Defaults.tol)
+function calc_north_boundaries(peps,pboundaries;alg=QR_free_vomps())
     #use vomps to optimize them
     boundaries = Zygote.bufferfrom(pboundaries)
     for i in 1:(size(peps,1)-1)
@@ -51,17 +51,17 @@ function calc_north_boundaries(peps,pboundaries;maxiter=Defaults.maxiter,tol=Def
             push!(pepsline,peps[i,t])
         end
 
-        boundaries[i+1] = north_vomps(boundaries[i],pepsline,boundaries[i+1],tol=tol,maxiter=maxiter)
+        boundaries[i+1] = approximate(boundaries[i],pepsline,boundaries[i+1],alg)
 
     end
     return copy(boundaries)
 end
 
-function calc_boundaries(peps,old_boundaries;maxiter=Defaults.maxiter,tol=Defaults.tol)
+function calc_boundaries(peps,old_boundaries;alg=QR_free_vomps())
     boundaries = Zygote.Buffer(old_boundaries)
 
     for cd in Dirs
-        boundaries[cd] = calc_north_boundaries(rotate_north(peps,cd),old_boundaries[cd],maxiter=maxiter,tol=tol)
+        boundaries[cd] = calc_north_boundaries(rotate_north(peps,cd),old_boundaries[cd];alg=alg)
     end
 
     return copy(boundaries)

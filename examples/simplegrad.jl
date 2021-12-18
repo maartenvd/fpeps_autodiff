@@ -22,5 +22,5 @@ let
 
     ham = ham1+ham2+ham3;
 
-    retval = find_groundstate(peps,ham,ConjugateGradient(verbosity=2),gen_boundaries(peps,chi))
+    retval = find_groundstate(peps,ham,QR_free_vomps(maxiter=5),SVD_vomps(),ConjugateGradient(verbosity=2),gen_boundaries(peps,chi))
 end

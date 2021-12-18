@@ -1,7 +1,7 @@
 #need to figure out how to both return the energy and cache intermediaries
-function calc_energy(peps,ham,prev_boundaries)
+function calc_energy(peps,ham,prev_boundaries;alg=QR_free_vomps())
 
-    boundaries = calc_boundaries(peps,prev_boundaries)
+    boundaries = calc_boundaries(peps,prev_boundaries,alg=alg)
     toret = 0.0 + 0im;
 
     toret += calc_energy_impl(peps,boundaries[North],boundaries[South],ham)

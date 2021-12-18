@@ -1,11 +1,10 @@
 #use an algorithm from optimkit to minimize the energy
-function find_groundstate(state,ham,alg,pars)
-
+function find_groundstate(state,ham,derivalg,retractalg,optimalg,pars)
 
     function objfun(x)
         (state,pars,energy) = x;
 
-        cfun(t) = calc_energy(t,ham,pars)[1]
+        cfun(t) = calc_energy(t,ham,pars,alg=derivalg)[1]
         derivs = cfun'(state);
         derivs ./= size(state,1)*size(state,2)
         return energy,derivs
@@ -18,7 +17,9 @@ function find_groundstate(state,ham,alg,pars)
         flush(stdout)
 
         nstate = ostate+α*cgr;
-        (nenergy,npars) = calc_energy(nstate,ham,opars);
+
+        (nenergy,npars) = calc_energy(nstate,ham,opars,alg=retractalg);
+        (nenergy,npars) = calc_energy(nstate,ham,npars,alg=derivalg);
 
         return (nstate,npars,nenergy),cgr
     end
@@ -40,7 +41,10 @@ function find_groundstate(state,ham,alg,pars)
 
     #return optimtest(objfun, (state,pars,calc_energy(state,ham,pars)[1]), objfun((state,pars,calc_energy(state,ham,pars)[1]))[2]; alpha= 0:0.01:0.1,retract = retract, inner = inner)
 
-    (x,fx,gx,normgradhistory)=optimize(objfun,(state,pars,calc_energy(state,ham,pars)[1]),alg;
+    pars = calc_boundaries(state,pars,alg=retractalg)
+    (en,pars) = calc_energy(state,ham,pars,alg=derivalg)
+
+    (x,fx,gx,normgradhistory)=optimize(objfun,(state,pars,en),optimalg;
         retract = retract,
         inner = inner,
         transport! = transport!,
