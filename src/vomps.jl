@@ -43,11 +43,11 @@ function approximate(above,pepsline,obelow,alg::QR_free_vomps)
         err = 0.0;
 
         for i = 1:length(above)-1
-            @ein temp[-1,-2,-3,-4]:= (GL[i])[-1,7,8,9]*(above[i])[9,5,3,1]*(GR[i])[1,4,2,-4]*(pepsline[i])[7,-2,4,5,6]*conj(pepsline[i])[8,-3,2,3,6]
-            @ein temp[-1,-2,-3,-4]:= pinv(NL[i])[1,-1]*temp[1,-2,-3,2]*pinv(NR[i])[-4,2]
+            @tensor temp[-1 -2 -3;-4]:= (GL[i])[-1,7,8,9]*(above[i])[9,5,3,1]*(GR[i])[1,4,2,-4]*(pepsline[i])[7,-2,4,5,6]*conj(pepsline[i][8,-3,2,3,6])
+            @tensor temp[-1 -2 -3;-4]:= pinv(NL[i])[-1,1]*temp[1,-2,-3,2]*pinv(NR[i])[2,-4]
 
-            @ein angle[]:=temp[1,2,3,4]*conj(below[i])[1,2,3,4]
-            fid = (angle[1]*angle[1]')/(norm(temp)^2*norm(below[i])^2)
+            angle = @tensor temp[1,2,3,4]*conj(below[i][1,2,3,4])
+            fid = (angle*angle')/(norm(temp)^2*norm(below[i])^2)
             err = max(err,1-abs(fid))
 
             totalnorm = norm(temp);
@@ -58,11 +58,11 @@ function approximate(above,pepsline,obelow,alg::QR_free_vomps)
         end
 
         for i = length(above):-1:2
-            @ein temp[-1,-2,-3,-4]:= (GL[i])[-1,7,8,9]*(above[i])[9,5,3,1]*(GR[i])[1,4,2,-4]*(pepsline[i])[7,-2,4,5,6]*conj(pepsline[i])[8,-3,2,3,6]
-            @ein temp[-1,-2,-3,-4]:= pinv(NL[i])[1,-1]*temp[1,-2,-3,2]*pinv(NR[i])[-4,2]
+            @tensor temp[-1 -2 -3;-4]:= (GL[i])[-1,7,8,9]*(above[i])[9,5,3,1]*(GR[i])[1,4,2,-4]*(pepsline[i])[7,-2,4,5,6]*conj(pepsline[i][8,-3,2,3,6])
+            @tensor temp[-1 -2 -3;-4]:= pinv(NL[i])[-1,1]*temp[1,-2,-3,2]*pinv(NR[i])[2,-4]
 
-            @ein angle[]:=temp[1,2,3,4]*conj(below[i])[1,2,3,4]
-            fid = (angle[1]*angle[1]')/(norm(temp)^2*norm(below[i])^2)
+            angle = @tensor temp[1,2,3,4]*conj(below[i][1,2,3,4])
+            fid = (angle*angle')/(norm(temp)^2*norm(below[i])^2)
             err = max(err,1-abs(fid))
 
             totalnorm = norm(temp);
@@ -103,33 +103,26 @@ function approximate(above,pepsline,obelow,alg::QR_vomps)
         err = 0.0;
 
         for i = 1:length(above)-1
-            @ein temp[-1,-2,-3,-4]:= (GL[i])[-1,7,8,9]*(above[i])[9,5,3,1]*(GR[i])[1,4,2,-4]*(pepsline[i])[7,-2,4,5,6]*conj(pepsline[i])[8,-3,2,3,6]
-
-            @ein angle[]:=temp[1,2,3,4]*conj(below[i])[1,2,3,4]
-            fid = (angle[1]*angle[1]')/(norm(temp)^2*norm(below[i])^2)
-            err = max(err,1-abs(fid))
-
+            @tensor temp[-1 -2 -3;-4]:= (GL[i])[-1,7,8,9]*(above[i])[9,5,3,1]*(GR[i])[1,4,2,-4]*(pepsline[i])[7,-2,4,5,6]*conj(pepsline[i][8,-3,2,3,6])
+            err = max(err,norm(temp-below[i])/norm(below[i]))
             (below[i],c) = leftorth(temp,(1,2,3),(4,));
 
-            @ein below[i+1][-1,-2,-3,-4]:=c[-1,1]*below[i+1][1,-2,-3,-4]
+            @tensor below[i+1][-1 -2 -3;-4]:=c[-1,1]*below[i+1][1,-2,-3,-4]
 
             GL[i+1] = mps_apply_transfer_left(GL[i],pepsline[i],above[i],below[i])
         end
 
         for i = length(above):-1:2
-            @ein temp[-1,-2,-3,-4]:= (GL[i])[-1,7,8,9]*(above[i])[9,5,3,1]*(GR[i])[1,4,2,-4]*(pepsline[i])[7,-2,4,5,6]*conj(pepsline[i])[8,-3,2,3,6]
+            @tensor temp[-1 -2 -3;-4]:= (GL[i])[-1,7,8,9]*(above[i])[9,5,3,1]*(GR[i])[1,4,2,-4]*(pepsline[i])[7,-2,4,5,6]*conj(pepsline[i][8,-3,2,3,6])
+            err = max(err,norm(temp-below[i])/norm(below[i]))
 
-            @ein angle[]:=temp[1,2,3,4]*conj(below[i])[1,2,3,4]
-            fid = (angle[1]*angle[1]')/(norm(temp)^2*norm(below[i])^2)
-            err = max(err,1-abs(fid))
-
-
-            (c,below[i]) = rightorth(temp,(1,),(2,3,4));
-
-            @ein below[i-1][-1,-2,-3,-4]:=below[i-1][-1,-2,-3,1]*c[1,-4]
+            (c,t) = rightorth(temp,(1,),(2,3,4));
+            below[i] = permute(t,(1,2,3),(4,))
+            @tensor below[i-1][-1 -2 -3;-4]:=below[i-1][-1,-2,-3,1]*c[1,-4]
 
             GR[i-1] = mps_apply_transfer_right(GR[i],pepsline[i],above[i],below[i])
         end
+
 
         if err < tol
             break
@@ -137,13 +130,13 @@ function approximate(above,pepsline,obelow,alg::QR_vomps)
 
     end
 
-    #err > tol && @warn  "vomps failed to converge $(err)"
+    #err > tol && @warn "vomps failed to converge $(err)"
 
     return copy(below)
 end
 
 function approximate(above,pepsline,obelow,alg::SVD_vomps)
-    tol = alg.tol; maxiter = alg.maxiter; trunc = alg.trunc;
+    tol = alg.tol; maxiter = alg.maxiter; trunc = truncbelow(alg.trunc);
 
     T = eltype(above[1]);
 
@@ -157,29 +150,29 @@ function approximate(above,pepsline,obelow,alg::SVD_vomps)
         err = 0.0;
 
         for i = 1:length(above)-2
-            @ein temp[-1,-2,-3,-4,-5,-6] := GL[i][-1,1,2,3]*above[i][3,4,5,6]*above[i+1][6,7,8,9]*GR[i+1][9,10,11,-6]*pepsline[i][1,-2,12,4,14]*conj(pepsline[i])[2,-3,13,5,14]*pepsline[i+1][12,-4,10,7,15]*conj(pepsline[i+1])[13,-5,11,8,15]
+            @tensor temp[-1,-2,-3,-4,-5,-6] := GL[i][-1,1,2,3]*above[i][3,4,5,6]*above[i+1][6,7,8,9]*GR[i+1][9,10,11,-6]*pepsline[i][1,-2,12,4,14]*conj(pepsline[i][2,-3,13,5,14])*pepsline[i+1][12,-4,10,7,15]*conj(pepsline[i+1][13,-5,11,8,15])
             (U,S,V) = tsvd(temp,(1,2,3),(4,5,6),trunc = trunc)
 
-            @ein derp1[-1,-2,-3,-4]:=below[i][-1,-2,-3,1]*below[i+1][1,-4,-5,-6]
-            @ein derp2[-1,-2,-3,-4]:=U[-1,-2,-3,1]*S[1,2]*V[2,-4,-5,-6]
+            @tensor derp1[-1 -2 -3;-4 -5 -6]:=below[i][-1,-2,-3,1]*below[i+1][1,-4,-5,-6]
+            @tensor derp2[-1 -2 -3;-4 -5 -6]:=U[-1,-2,-3,1]*S[1,2]*V[2,-4,-5,-6]
             err = max(err,norm(derp1-derp2)/norm(temp));
 
             below[i] = U
-            @ein below[i+1][-1,-2,-3,-4]:=S[-1,1]*V[1,-2,-3,-4]
+            @tensor below[i+1][-1 -2 -3;-4]:=S[-1,1]*V[1,-2,-3,-4]
 
             GL[i+1] = mps_apply_transfer_left(GL[i],pepsline[i],above[i],below[i])
         end
 
         for i = length(above)-1:-1:1
-            @ein temp[-1,-2,-3,-4,-5,-6] := GL[i][-1,1,2,3]*above[i][3,4,5,6]*above[i+1][6,7,8,9]*GR[i+1][9,10,11,-6]*pepsline[i][1,-2,12,4,14]*conj(pepsline[i])[2,-3,13,5,14]*pepsline[i+1][12,-4,10,7,15]*conj(pepsline[i+1])[13,-5,11,8,15]
+            @tensor temp[-1,-2,-3,-4,-5,-6] := GL[i][-1,1,2,3]*above[i][3,4,5,6]*above[i+1][6,7,8,9]*GR[i+1][9,10,11,-6]*pepsline[i][1,-2,12,4,14]*conj(pepsline[i][2,-3,13,5,14])*pepsline[i+1][12,-4,10,7,15]*conj(pepsline[i+1][13,-5,11,8,15])
             (U,S,V) = tsvd(temp,(1,2,3),(4,5,6),trunc = trunc)
 
-            @ein derp1[-1,-2,-3,-4]:=below[i][-1,-2,-3,1]*below[i+1][1,-4,-5,-6]
-            @ein derp2[-1,-2,-3,-4]:=U[-1,-2,-3,1]*S[1,2]*V[2,-4,-5,-6]
+            @tensor derp1[-1 -2 -3;-4 -5 -6]:=below[i][-1,-2,-3,1]*below[i+1][1,-4,-5,-6]
+            @tensor derp2[-1 -2 -3;-4 -5 -6]:=U[-1,-2,-3,1]*S[1,2]*V[2,-4,-5,-6]
             err = max(err,norm(derp1-derp2)/norm(temp));
 
-            @ein below[i][-1,-2,-3,-4] := U[-1,-2,-3,1]*S[1,-4]
-            below[i+1] = V
+            @tensor below[i][-1 -2 -3;-4] := U[-1,-2,-3,1]*S[1,-4]
+            below[i+1] = permute(V,(1,2,3),(4,))
 
             GR[i] = mps_apply_transfer_right(GR[i+1],pepsline[i+1],above[i+1],below[i+1])
         end
@@ -199,13 +192,14 @@ end
 function init_envs(above,pepsline,below)
     T = eltype(above[1]);
 
-    temp = eye(T,1,1);
+    ou = oneunit(space(below[1],1));
+    temp = isometry(Matrix{T},ou,ou);
 
-    ltemp = eye(T,size(pepsline[1],West),size(pepsline[1],West));
-    rtemp = eye(T,size(pepsline[length(pepsline)],East),size(pepsline[length(pepsline)],East))
+    ltemp = isometry(Matrix{T},space(pepsline[1],West)',space(pepsline[1],West)');
+    rtemp = isometry(Matrix{T},space(pepsline[length(pepsline)],East)',space(pepsline[length(pepsline)],East)')
 
-    @ein leftstart[-1,-2,-3,-4] := ltemp[-2,-3]*temp[-1,-4]
-    @ein rightstart[-1,-2,-3,-4] := rtemp[-2,-3]*temp[-1,-4]
+    @tensor leftstart[-1 -2 -3;-4] := ltemp[-2,-3]*temp[-1,-4]
+    @tensor rightstart[-1 -2 -3;-4] := rtemp[-2,-3]*temp[-1,-4]
 
     GL = Zygote.Buffer([leftstart]);GR = Zygote.Buffer([rightstart]);
     GL[1] = leftstart;GR[1] = rightstart;
@@ -221,11 +215,12 @@ end
 function init_envs(below)
     T = eltype(below[1]);
 
-    temp = eye(T,1,1)
+    ou = oneunit(space(below[1],1));
+    temp = isometry(Matrix{T},ou,ou);
 
 
-    @ein leftstart[-1,-2] := temp[-1,-2]
-    @ein rightstart[-1,-2] := temp[-1,-2]
+    @tensor leftstart[-1;-2] := temp[-1,-2]
+    @tensor rightstart[-1;-2] := temp[-1,-2]
 
     NL = Zygote.Buffer([leftstart]);NR = Zygote.Buffer([rightstart]);
     NL[1] = leftstart;NR[1] = rightstart;

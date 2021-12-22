@@ -3,27 +3,28 @@ function gen_north_bounds(peps,chi)
     T = eltype(peps[1,1])
 
     boundaries = map(1:size(peps,1)) do i
-        lds = [1]
-        rds = [1]
+        lds = [oneunit(chi)]
+        rds = [oneunit(chi)]
 
         for j = 1:size(peps,2)
-            push!(lds,min(size(peps[i,j],North)*size(peps[i,j],North)*lds[j],chi))
-            push!(rds,min(size(peps[i,end-j+1],North)*size(peps[i,end-j+1],North)*rds[j],chi))
+            push!(lds,infimum(fuse(space(peps[i,j],North)'*space(peps[i,j],North)*lds[j]),chi))
+            push!(rds,infimum(fuse(space(peps[i,end-j+1],North)'*space(peps[i,end-j+1],North)*rds[j]),chi))
         end
         rds = reverse(rds)
 
         cb = map(1:size(peps,2)) do j
-            psize = size(peps[i,j],North)
+            psize = space(peps[i,j],North)
 
             if i>1
-                lD = min(lds[j],rds[j])
-                rD = min(lds[j+1],rds[j+1])
+                lD = infimum(lds[j],rds[j])
+                rD = infimum(lds[j+1],rds[j+1])
+                TensorMap(randn,T,lD*psize'*psize,rD)
             else
-                lD = 1
-                rD = 1
+                lD = oneunit(chi)
+                rD = oneunit(chi)
+                permute(isometry(Matrix{T},lD*psize',rD*psize'),(1,2,4),(3,))
             end
 
-            randn(T,lD,psize,psize,rD)
         end
     end
 end

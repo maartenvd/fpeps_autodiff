@@ -1,5 +1,5 @@
 #need to figure out how to both return the energy and cache intermediaries
-function calc_energy(peps,ham,prev_boundaries;alg=QR_free_vomps())
+function calc_energy(peps,ham,prev_boundaries;alg=QR_vomps())
 
     boundaries = calc_boundaries(peps,prev_boundaries,alg=alg)
     toret = 0.0 + 0im;
@@ -20,15 +20,15 @@ function calc_energy_impl(peps,nbounds,sbounds,ham)
         n = nbounds[r];
         s = sbounds[size(peps,1)-r+1];
 
-        temp = eye(T,1,1);
+        ou = oneunit(space(n[1],1));
+        temp = isometry(Matrix{T},ou,ou);
 
-        NLtemp = eye(T,size(peps[r,1],West),size(peps[r,1],West))
-        NRtemp = eye(T,size(peps[r,end],East),size(peps[r,end],East))
+        NLtemp = isometry(Matrix{T},space(peps[r,1],West),space(peps[r,1],West))
+        NRtemp = isometry(Matrix{T},space(peps[r,end],East),space(peps[r,end],East))
 
-        @ein NL[-1,-2,-3,-4] := temp[-1,-4]*NLtemp[-2,-3]
-        @ein NR[-1,-2,-3,-4] := temp[-1,-4]*NRtemp[-2,-3]
+        @tensor NL[-1,-2,-3,-4] := temp[-1,-4]*NLtemp[-3,-2]
+        @tensor NR[-1,-2,-3,-4] := temp[-1,-4]*NRtemp[-3,-2]
 
-        NL = NL
         GL = crosstransfer(NL,peps[r,1],n[1],s[end],dir=West)*0;
 
         for c in 1:size(peps,2)-1
@@ -44,10 +44,10 @@ function calc_energy_impl(peps,nbounds,sbounds,ham)
 
         NL = crosstransfer(NL,peps[r,end],n[end],s[1],dir=West)
 
-        @ein h[] := GL[1,2,3,4]*NR[4,2,3,1]
-        @ein n[] := NL[1,2,3,4]*NR[4,2,3,1]
-
-        toret += h[]/n[]
+        h = @tensor GL[1,2,3,4]*NR[4,2,3,1]
+        n = @tensor NL[1,2,3,4]*NR[4,2,3,1]
+        
+        toret += h/n
 
     end
 

@@ -15,6 +15,7 @@ function find_groundstate(state,ham,derivalg,retractalg,optimalg,pars)
 
         @info "trying stepsize $α"
         flush(stdout)
+        flush(stderr)
 
         nstate = ostate+α*cgr;
 
@@ -39,7 +40,7 @@ function find_groundstate(state,ham,derivalg,retractalg,optimalg,pars)
     scale!(v, α) = v.*α
     add!(vdst, vsrc, α) = vdst+α.*vsrc
 
-    #return optimtest(objfun, (state,pars,calc_energy(state,ham,pars)[1]), objfun((state,pars,calc_energy(state,ham,pars)[1]))[2]; alpha= 0:0.01:0.1,retract = retract, inner = inner)
+    #return optimtest(objfun, (state,pars,calc_energy(state,ham,pars)[1]), objfun((state,pars,calc_energy(state,ham,pars)[1]))[2]; alpha= -0.01:0.001:0.01,retract = retract, inner = inner)
 
     pars = calc_boundaries(state,pars,alg=retractalg)
     (en,pars) = calc_energy(state,ham,pars,alg=derivalg)
